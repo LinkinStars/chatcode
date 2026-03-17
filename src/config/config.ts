@@ -51,6 +51,8 @@ export interface WorkersConfig {
 export interface AsrConfig {
   enabled: boolean;
   endpoint: string;
+  provider: 'local' | 'groq';
+  groqApiKey?: string | undefined;
 }
 
 export interface SecurityConfig {
@@ -131,6 +133,8 @@ export function loadConfig(): Config {
     asr: {
       enabled: getEnvOrDefault('ASR_ENABLED', 'false') === 'true',
       endpoint: getEnvOrDefault('ASR_ENDPOINT', 'http://localhost:8600'),
+      provider: (getEnvOrDefault('ASR_PROVIDER', 'local') as 'local' | 'groq'),
+      groqApiKey: process.env.GROQ_API_KEY || undefined,
     },
     security: {
       secretRequired: getEnvOrDefault('SECURITY_SECRET_REQUIRED', 'false') === 'true',

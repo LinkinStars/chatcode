@@ -128,20 +128,44 @@ export class MessageHandler {
       const audioResponse = await fetch(fileLink.toString());
       const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
 
-      const formData = new FormData();
-      formData.append('file', new Blob([audioBuffer]), 'voice.ogg');
+      let text: string;
 
-      const asrResponse = await fetch(`${this.config.asr.endpoint}/asr`, {
-        method: 'POST',
-        body: formData,
-      });
+      if (this.config.asr.provider === 'groq' && this.config.asr.groqApiKey) {
+        // Use Groq Whisper API
+        const formData = new FormData();
+        formData.append('file', new Blob([audioBuffer]), 'voice.ogg');
+        formData.append('model', 'whisper-large-v3');
 
-      if (!asrResponse.ok) {
-        throw new Error(`ASR service returned ${asrResponse.status}`);
+        const groqResponse = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${this.config.asr.groqApiKey}` },
+          body: formData,
+        });
+
+        if (!groqResponse.ok) {
+          const errBody = await groqResponse.text();
+          throw new Error(`Groq API returned ${groqResponse.status}: ${errBody}`);
+        }
+
+        const result = await groqResponse.json() as { text: string };
+        text = result.text;
+      } else {
+        // Use local ASR service
+        const formData = new FormData();
+        formData.append('file', new Blob([audioBuffer]), 'voice.ogg');
+
+        const asrResponse = await fetch(`${this.config.asr.endpoint}/asr`, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!asrResponse.ok) {
+          throw new Error(`ASR service returned ${asrResponse.status}`);
+        }
+
+        const result = await asrResponse.json() as { text: string };
+        text = result.text;
       }
-
-      const result = await asrResponse.json() as { text: string };
-      const text = result.text;
 
       if (!text) {
         await ctx.reply('Could not recognize speech from the voice message.');

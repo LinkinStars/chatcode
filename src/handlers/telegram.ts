@@ -94,7 +94,30 @@ export class TelegramHandler {
   }
 
 
+  private async registerCommands(): Promise<void> {
+    await this.bot.telegram.setMyCommands([
+      { command: 'start', description: 'Initialize the bot' },
+      { command: 'listproject', description: 'Select a project to work with' },
+      { command: 'createproject', description: 'Create a new project' },
+      { command: 'exitproject', description: 'Exit current project' },
+      { command: 'model', description: 'Switch Claude model' },
+      { command: 'bypass', description: 'Skip all permission prompts' },
+      { command: 'default', description: 'Standard permission mode' },
+      { command: 'acceptedits', description: 'Auto-accept file edits' },
+      { command: 'plan', description: 'Read-only planning mode' },
+      { command: 'clear', description: 'Clear current session' },
+      { command: 'abort', description: 'Abort current query' },
+      { command: 'resume', description: 'Resume previous session' },
+      { command: 'ls', description: 'Browse project files' },
+      { command: 'status', description: 'View current status' },
+      { command: 'help', description: 'Show help' },
+    ]);
+  }
+
   private setupHandlers(): void {
+    // Register command menu for Telegram UI
+    this.registerCommands().catch(err => console.error('Failed to register commands:', err));
+
     // Command handlers
     this.bot.start((ctx) => this.commandHandler.handleStart(ctx));
     this.bot.command('createproject', (ctx) => this.commandHandler.handleCreateProject(ctx));

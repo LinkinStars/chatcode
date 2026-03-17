@@ -31,6 +31,9 @@ export class CommandHandler {
   async handleStart(ctx: Context): Promise<void> {
     if (!ctx.chat) return;
 
+    // Initialize user session on /start
+    await this.getOrCreateUser(ctx.chat.id);
+
     await this.telegramSender.safeSendMessage(ctx.chat.id, MESSAGES.WELCOME_TEXT);
   }
 
